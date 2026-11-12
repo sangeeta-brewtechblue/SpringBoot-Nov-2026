@@ -1,0 +1,60 @@
+package com.sj.core.simple_demo;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+
+@Component("u1")
+public class User {
+    Calculator c;  
+    
+	
+	public User() {
+		//super();
+		System.out.println("constr User");
+		// TODO Auto-generated constructor stub
+	}	
+
+	@Autowired
+	public User(@Qualifier("B") Calculator c) {
+		super();
+		//System.out.println("Param constr ...inj");
+		this.c = c;
+	}
+
+
+
+
+	public void invokefindSqrt(int n) {
+		
+		c.findSqrroot(13);
+		 
+	}
+
+	public Calculator getC() {
+		return c;
+	}
+
+	public void setC(Calculator c) {
+		System.out.println("setter injection....setter invoked");
+		
+		this.c = c;
+	}
+	
+	
+
+}
+
+
+/*
+public static void main(String[] args) {
+	// TODO Auto-generated method stub
+
+	   Calculator c  = new CalculatorB();
+	   c.findSqrroot(13);
+  
+     
+
+
+}*/

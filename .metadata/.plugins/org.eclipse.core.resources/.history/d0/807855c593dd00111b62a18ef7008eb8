@@ -1,0 +1,33 @@
+package com.sj;
+
+public class UserTraditional {
+     
+	 Calculator c1;
+	 
+	 
+	 
+     public UserTraditional(Calculator c1) {
+		super();
+		this.c1 = c1;
+	}
+	public Calculator getC1() {
+		return c1;
+	}
+	public void setC1(Calculator c1) {
+		this.c1 = c1;
+	}
+
+
+
+
+	public void invokeCalc(int no) {
+    	  
+    	      
+	       
+    	       c1.findSqrroot(no);
+	
+	      }
+	
+	}
+
+}

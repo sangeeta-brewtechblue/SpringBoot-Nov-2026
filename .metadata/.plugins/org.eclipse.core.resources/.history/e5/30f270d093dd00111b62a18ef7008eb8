@@ -1,0 +1,15 @@
+package com.sj;
+
+public class DemoTr {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+ 
+	//	UserTra u1 
+	//	 Calculator c1 = new CalculatorB();
+		 
+		 u1.invokeCalc(x);
+		
+	}
+
+}
