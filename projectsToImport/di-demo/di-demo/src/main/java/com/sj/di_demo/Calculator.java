@@ -1,4 +1,4 @@
-package com.sj;
+package com.sj.di_demo;
 
 public interface Calculator {
 	
