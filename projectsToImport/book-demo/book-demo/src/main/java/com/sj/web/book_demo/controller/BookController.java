@@ -25,7 +25,7 @@ public class BookController {
 	   public BookController() {
 		super();
 		books = new ArrayList<Book>();
-		Book book1 = new Book(1,"not without mu doaughter","Betty Mehmoody",450);
+		Book book1 = new Book(1,"not without my doaughter","Betty Mehmoody",450);
 		Book book2 = new Book(2,"Bitter chocolate","Pinky Virani",350);
 		Book book3 = new Book(3,"Accidental PrimeMinister","Sanjay Baru",950);
 		books.add(book1);

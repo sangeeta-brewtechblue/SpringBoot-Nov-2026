@@ -2,8 +2,13 @@ package com.sj.web.book_demo.model;
 
 import java.util.Objects;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
+@Entity
 public class Book {
 	
+	@Id
 	private int book_id;
 	private String title;
 	private String author;
