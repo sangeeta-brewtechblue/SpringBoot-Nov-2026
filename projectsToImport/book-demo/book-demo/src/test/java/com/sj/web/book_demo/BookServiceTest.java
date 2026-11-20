@@ -45,21 +45,20 @@ class BookServiceTest {
 
         assertThrows(BookNotFoundException.class, () -> bookService.getBookById(99));
     }
-
-    @Test
-    void createBook_throwsDuplicateId_whenIdAlreadyExists() {
-        Book book = new Book(1, "Spring in Action", "Craig Walls", 499.0);
-        when(bookRepository.existsById(1)).thenReturn(true);
-
-        assertThrows(DuplicateIdException.class, () -> bookService.createBook(book));
-    }
-
-    @Test
-    void deleteBook_deletes_whenExists() {
-        when(bookRepository.existsById(1)).thenReturn(true);
-
-        bookService.removeBookById(1);
-
-        verify(bookRepository).deleteById(1);
-    }
+    
+   @Test void createBook_throwsDuplicateId_whenIdAlreadyExists() { 
+		 Book book = new Book(1, "Spring in Action", "Craig Walls", 499.0);
+	 
+		 when(bookRepository.existsById(1)).thenReturn(true);
+	  
+	     assertThrows(DuplicateIdException.class, () -> bookService.createBook(book));
+	  }
+	  
+   @Test void deleteBook_deletes_whenExists() {
+	  when(bookRepository.existsById(1)).thenReturn(true);
+	  
+	  bookService.removeBookById(1);
+	  
+	  verify(bookRepository).deleteById(1); }
+	 
 }
