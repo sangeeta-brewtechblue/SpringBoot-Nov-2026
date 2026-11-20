@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sj.web.book_demo.model.Book;
 import com.sj.web.book_demo.repository.BookRepo;
+import com.sj.web.book_demo.service.BookService;
 
 
 @RestController
@@ -22,7 +23,7 @@ import com.sj.web.book_demo.repository.BookRepo;
 public class BookWebController {
 	
 	  @Autowired
-	  BookRepo bookRepository;
+	  BookService bookService;
 		
 	  @GetMapping("/greetings")
 	   public String sayHello() {
@@ -33,25 +34,22 @@ public class BookWebController {
 	  @GetMapping("/books")
 	   public List<Book> getAllBooks(){
 		   
-		   return bookRepository.findAll();
+		   return bookService.getAllBooks();
 			   
 	   }	  
 	   @GetMapping("/books/{bookId}")
 	   public Book getBookById( @PathVariable   int bookId) {
 	  
-	      Optional<Book> book  =  bookRepository.findById(bookId);
-	      
-	       if(book.isPresent())
-	    	return book.get();
-	      
-	       return new Book(0,null,null,0.0);
+		   
+		  return bookService.getBookById(bookId);
+	     
 	       
 	   }
 	   
 	   @PostMapping("/books")
 	   public Book createBook(@RequestBody Book newBook) {
 		   
-		      return bookRepository.save(newBook);
+		      return bookService.createBook(newBook);
 		   
 	   }
 	   
@@ -59,26 +57,44 @@ public class BookWebController {
 	   @PutMapping("/books/{id}")
 	   public Book updateBook(@RequestBody Book toUpdate,@PathVariable int id ) {
 		     
-		   Book toBeUpdated =   getBookById( id);
+		   return bookService.updateBook(toUpdate,id);
 		   
-		   toBeUpdated.setAuthor(toUpdate.getAuthor());
-	       toBeUpdated.setPrice(toUpdate.getPrice());
-	       toBeUpdated.setTitle(toUpdate.getTitle());
+		   /*
+			 * Book toBeUpdated = getBookById( id);
+			 * 
+			 * toBeUpdated.setAuthor(toUpdate.getAuthor());
+			 * toBeUpdated.setPrice(toUpdate.getPrice());
+			 * toBeUpdated.setTitle(toUpdate.getTitle());
+			 */
 	       
-	      return bookRepository.save(toBeUpdated);
+	     
 	  }
 	   
 	  @DeleteMapping("/books/{id}")
 	  public List<Book> removeBookById(@PathVariable int id){
 		  
-		    bookRepository.deleteById(id);
+		    bookService.removeBookById(id);
 		    
 		    return getAllBooks();
 	  }
-	    
+	  
+	  @GetMapping("/books/authors/{author}")
+	  public List<Book> getBooksByAuthor(@PathVariable String author){
+		  
+		    return bookService.getBooksByAuthor(author);
+		  
+		   
+		  
+	  }
+	 
+	  @GetMapping("/books/prices/{maxPrice}")
+	  public List<Book> getBooksUnderPrice( @PathVariable double maxPrice){
+		  
+		  return bookService.findBooksUnderPrice(maxPrice);
+		  
+	  }
 	   
-	   
-	   
+	 
 	   
 
 }

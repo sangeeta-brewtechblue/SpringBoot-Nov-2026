@@ -1,0 +1,94 @@
+package com.example.bookstore.controller;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.example.bookstore.entity.Book;
+import com.example.bookstore.exception.BookDoesNotExistException;
+import com.example.bookstore.exception.DuplicateIdException;
+import com.example.bookstore.service.BookService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+@WebMvcTest(BookController.class)
+class BookControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private BookService bookService;
+
+    @Test
+    void createBook_returns201AndBookJson() throws Exception {
+        Book book = new Book(1L, "Effective Java", "Joshua Bloch", 650.0);
+        when(bookService.createBook(any(Book.class))).thenReturn(book);
+
+        mockMvc.perform(post("/api/books")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(book)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.title").value("Effective Java"))
+                .andExpect(jsonPath("$.price").value(650.0));
+    }
+
+    @Test
+    void createBook_returns409OnDuplicateId() throws Exception {
+        Book book = new Book(1L, "Effective Java", "Joshua Bloch", 650.0);
+        when(bookService.createBook(any(Book.class))).thenThrow(new DuplicateIdException(1L));
+
+        mockMvc.perform(post("/api/books")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(book)))
+                .andExpect(status().isConflict())
+                .andExpect(content().string("A book already exists with id: 1"));
+    }
+
+    @Test
+    void getBook_returns404WhenNotFound() throws Exception {
+        when(bookService.getBookById(99L)).thenThrow(new BookDoesNotExistException(99L));
+
+        mockMvc.perform(get("/api/books/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Book does not exist with id: 99"));
+    }
+
+    @Test
+    void updateBook_returns200AndUpdatedBook() throws Exception {
+        Book updated = new Book(1L, "Effective Java 3rd Ed.", "Joshua Bloch", 750.0);
+        when(bookService.updateBook(eq(1L), any(Book.class))).thenReturn(updated);
+
+        mockMvc.perform(put("/api/books/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updated)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Effective Java 3rd Ed."))
+                .andExpect(jsonPath("$.price").value(750.0));
+    }
+
+    @Test
+    void deleteBook_returns204() throws Exception {
+        doNothing().when(bookService).deleteBook(1L);
+
+        mockMvc.perform(delete("/api/books/1"))
+                .andExpect(status().isNoContent());
+    }
+}

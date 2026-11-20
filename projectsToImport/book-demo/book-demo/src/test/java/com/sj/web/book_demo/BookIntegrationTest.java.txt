@@ -1,0 +1,97 @@
+package com.example.bookstore;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.example.bookstore.entity.Book;
+import com.example.bookstore.repository.BookRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+class BookIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private BookRepository bookRepository;
+
+    @BeforeEach
+    void cleanDatabase() {
+        bookRepository.deleteAll();
+    }
+
+    @Test
+    void crudFlow_createsReadsUpdatesAndDeletesBookEndToEnd() throws Exception {
+        Book newBook = new Book("Domain-Driven Design", "Eric Evans", 799.0);
+
+        // 1. CREATE (POST -> 201 Created)
+        MvcResult createResult = mockMvc.perform(post("/api/books")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newBook)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.title").value("Domain-Driven Design"))
+                .andExpect(jsonPath("$.author").value("Eric Evans"))
+                .andExpect(jsonPath("$.price").value(799.0))
+                .andReturn();
+
+        JsonNode createdJson = objectMapper.readTree(createResult.getResponse().getContentAsString());
+        long createdId = createdJson.get("id").asLong();
+
+        // 2. READ (GET -> 200 OK)
+        mockMvc.perform(get("/api/books/{id}", createdId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(createdId))
+                .andExpect(jsonPath("$.title").value("Domain-Driven Design"))
+                .andExpect(jsonPath("$.price").value(799.0));
+
+        // 3. UPDATE (PUT -> 200 OK)
+        Book updatedPayload = new Book(createdId, "Domain-Driven Design (Revised)", "Eric Evans", 850.0);
+        mockMvc.perform(put("/api/books/{id}", createdId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatedPayload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Domain-Driven Design (Revised)"))
+                .andExpect(jsonPath("$.price").value(850.0));
+
+        // 4. DELETE (DELETE -> 204 No Content)
+        mockMvc.perform(delete("/api/books/{id}", createdId))
+                .andExpect(status().isNoContent());
+
+        // 5. VERIFY NOT FOUND AFTER DELETE (GET -> 404 via GlobalExceptionHandler)
+        mockMvc.perform(get("/api/books/{id}", createdId))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Book does not exist with id: " + createdId));
+    }
+
+    @Test
+    void createBook_withExistingId_returns409ConflictFromGlobalHandler() throws Exception {
+        Book saved = bookRepository.save(new Book("Refactoring", "Martin Fowler", 699.0));
+        Book duplicateAttempt = new Book(saved.getId(), "Refactoring", "Martin Fowler", 699.0);
+
+        mockMvc.perform(post("/api/books")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(duplicateAttempt)))
+                .andExpect(status().isConflict())
+                .andExpect(content().string("A book already exists with id: " + saved.getId()));
+    }
+}
